@@ -3,29 +3,20 @@ struct PathToConfig {
     path: String,
 }
 
-const DEV_PATH: &str = "~/Desktop";
-// const PROD_PATH: &str = "~/Developer";
+const DEV_PATH: &str = "$HOME/Desktop";
+// const PROD_PATH: &str = "$HOME/Developer";
 
-fn main() -> std::io::Result<()> {
+fn main() {
     let mmc = PathToConfig::new();
-    // let mmc = std::path::Path::new(&mmc.path);
-    // let a = std::env::set_current_dir(&mmc);
-    let file_path = std::path::PathBuf::from(&mmc.path).join("hello.txt");
-    let a = std::fs::write(&file_path, "Hello")?;
-    println!("{:#?}", file_path);
-    println!("{:#?}", a);
+    println!("{:#?}", mmc.path);
 
-    for entry in std::fs::read_dir(&mmc.path)? {
-        let dir = match entry {
-            Ok(entry) => println!("{entry:?}"),
-            Err(e) => println!("{e:?}"),
-        };
-        println!("{:#?}", dir);
+    let a = std::env::set_current_dir(std::path::Path::new("/Users/harmeepatel/Desktop"));
+    println!("{:?}", std::env::current_dir());
+    let dirs = std::fs::read_dir("./").unwrap();
+    assert!(a.is_ok());
+    for dir in dirs {
+        println!("{}", dir.unwrap().path().display());
     }
-
-    // println!("{:#?}", mmc.display());
-
-    Ok(())
 }
 
 impl PathToConfig {
