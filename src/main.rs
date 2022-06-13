@@ -7,16 +7,15 @@ fn main() -> std::io::Result<()> {
 
     json.read_to_string(&mut buf)?;
     println!("{buf}");
+    println!("{}", std::any::type_name<&str>());
     untyped_example(&buf)?;
 
     Ok(())
 }
 
 fn untyped_example(data: &String) -> Result<()> {
-    // Parse the string of data into serde_json::Value.
     let v: Value = serde_json::from_str(&data.to_string())?;
 
-    // Access parts of the data by indexing with square brackets.
     println!("{}", v["one"]);
 
     Ok(())
