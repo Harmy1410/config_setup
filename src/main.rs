@@ -3,19 +3,14 @@ struct PathToConfig {
     path: String,
 }
 
-const DEV_PATH: &str = "$HOME/Desktop";
-// const PROD_PATH: &str = "$HOME/Developer";
+const DEV_PATH: &str = "/Desktop";
+// const PROD_PATH: &str = "/Developer";
 
 fn main() {
     let mmc = PathToConfig::new();
     println!("{:#?}", mmc.path);
-
-    let a = std::env::set_current_dir(std::path::Path::new("/Users/harmeepatel/Desktop"));
-    println!("{:?}", std::env::current_dir());
-    let dirs = std::fs::read_dir("./").unwrap();
-    assert!(a.is_ok());
-    for dir in dirs {
-        println!("{}", dir.unwrap().path().display());
+    if let Some(path) = home::home_dir() {
+        println!("{}", path.display());
     }
 }
 
