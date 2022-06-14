@@ -1,5 +1,13 @@
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io::Read;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ToFrom {
+    from: String,
+    to: String,
+}
+type JsonArray = Vec<ToFrom>;
 
 fn main() {
     let path = "/Users/harmeepatel/Developer/projects/rust/projects/config_setup/personal_config_symlinks.json";
@@ -16,8 +24,10 @@ fn main() {
 }
 
 fn parse_json(data: &str) {
-    let data: Value = serde_json::from_str(data).unwrap();
-    for i in data.as_array() {
-        println!("{:?}", i);
-    }
+    let data: JsonArray = match serde_json::from_str(data) {
+        Ok(data) => data,
+        Err(err) => panic!("err in serde_json::from_str: {}", err),
+    };
+
+    println!("{:#?}", data);
 }
