@@ -17,7 +17,7 @@ fn main() {
 
 fn parse_json(data: &str) {
     let data: Value = serde_json::from_str(data).unwrap();
-    println!("{}", data["one"]);
-    println!("{}", data["two"]);
-    println!("{}", data["three"]);
+    for i in data.as_array() {
+        println!("{:?}", i);
+    }
 }
