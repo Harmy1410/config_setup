@@ -1,5 +1,4 @@
 use std::io::Read;
-mod parse_json;
 mod path_to_config;
 
 fn main() -> std::io::Result<()> {
@@ -9,6 +8,6 @@ fn main() -> std::io::Result<()> {
 
     let mut buf = String::new();
     json_file.read_to_string(&mut buf)?;
-    dbg!(&buf);
+    println!("{buf:#}");
     Ok(())
 }
