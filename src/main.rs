@@ -25,10 +25,10 @@ impl PathToConfig {
 
 fn main() {
     let dev_path: String = String::from("/Desktop");
-    // let mut user_home_path: String = String::new();
-    // const PROD_PATH: &str = "/Developer";
-    let vec: Vec<String> = std::env::args().collect();
-    dbg!(vec);
+    // // const PROD_PATH: &str = "/Developer";
+    // let buf = String::new();
+    // let path = Path::new("./").to_str();
+
     let mmc = PathToConfig::new(&dev_path);
     println!("{:#?}", mmc.path);
     if let Some(mut path) = home::home_dir() {
