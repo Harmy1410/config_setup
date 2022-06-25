@@ -1,2 +1,2 @@
-# config_setup
+# setup_config
 rust program to setup my configuration on a new mac.
