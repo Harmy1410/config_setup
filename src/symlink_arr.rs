@@ -3,9 +3,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symlink {
+struct Symlink {
     pub from: String,
     pub to: String,
+}
+
+impl Symlink {
+    fn new() -> Symlink {
+        Symlink {
+            to: String::new(),
+            from: String::new(),
+        }
+    }
 }
 
 type Symlinks = Vec<Symlink>;
@@ -13,21 +22,32 @@ type Symlinks = Vec<Symlink>;
 pub fn create_syms(buf: &String) -> std::io::Result<()> {
     let arr: Symlinks = serde_json::from_str(buf)?;
     let mut exist_sym_count = 0;
+    let arr: Symlinks = arr
+        .iter()
+        .map(|sym| {
+            let env_home = vec!["$HOME", "~"];
+            let home = match std::env::var("HOME") {
+                Ok(home_user) => home_user,
+                Err(_) => String::from("Set $HOME."),
+            };
+            let mut temp = Symlink::new();
 
-    for sym in arr.iter() {
-        let home = match std::env::var("HOME") {
-            Ok(home_user) => home_user,
-            Err(_) => String::from("Set $HOME."),
-        };
+            for i in env_home {
+                if sym.to.contains(i) || sym.from.contains(i) {
+                    temp.to = sym.to.replace(i, &home);
+                    temp.from = sym.from.replace(i, &home);
+                }
+            }
+            temp
+        })
+        .collect();
 
-        let to = sym.to.replace("$HOME", &home);
-        let from = sym.from.replace("$HOME", &home);
-
-        let to_meta = match std::fs::symlink_metadata(&to) {
+    for sym in &arr {
+        let to_meta = match std::fs::symlink_metadata(&sym.to) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err(()),
         };
-        let from_meta = match std::fs::symlink_metadata(&from) {
+        let from_meta = match std::fs::symlink_metadata(&sym.from) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err(()),
         };
@@ -38,11 +58,11 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
                     exist_sym_count += 1;
                 }
             } else {
-                println!("Creating link from: \t{}\n\t\tto: \t{}", from, to);
+                println!("Creating link from: \t{}\n\t\tto: \t{}", sym.from, sym.to);
                 // std::os::unix::fs::symlink(i.from, i.to)?;
             }
         } else {
-            println!("Source file '{}' not found!!!", from);
+            println!("Source file '{}' not found!!!", sym.from);
         }
     }
 
