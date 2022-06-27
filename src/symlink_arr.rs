@@ -59,10 +59,17 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
                 }
             } else {
                 println!("Creating link from: \t{}\n\t\tto: \t{}", sym.from, sym.to);
-                // std::os::unix::fs::symlink(i.from, i.to)?;
+                std::os::unix::fs::symlink(&sym.from, &sym.to)?;
             }
         } else {
             println!("Source file '{}' not found!!!", sym.from);
+            let mut conf_to_remove = String::new();
+            let stdin = std::io::stdin(); // We get `Stdin` here.
+            stdin.read_line(&mut conf_to_remove)?;
+            println!(
+                "Want to remove it from json config? (y/n): {}",
+                &conf_to_remove
+            );
         }
     }
 
