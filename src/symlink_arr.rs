@@ -2,9 +2,22 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symlink<'a> {
-    pub from: &'a str,
-    pub to: &'a str,
+struct Symlink<'a> {
+    from: &'a str,
+    to: &'a str,
 }
 
-pub type SymlinkArr<'a> = Vec<Symlink<'a>>;
+type Symlinks<'a> = Vec<Symlink<'a>>;
+
+pub fn create_syms(buf: &String) -> std::io::Result<()> {
+    let arr: Symlinks = serde_json::from_str(buf)?;
+
+    for i in arr.iter() {
+        if let Ok(metadata) = std::fs::symlink_metadata(i.to) {
+            dbg!(metadata.file_type().is_symlink());
+        };
+        // let hello = std::os::unix::fs::symlink(&i.from, &i.to);
+    }
+
+    Ok(())
+}
