@@ -9,15 +9,22 @@ impl PathToConfig {
             println!("no need to pass unnecessary stuff!!!\n");
         }
 
-        let default_path_to_config =
-            "/Users/harmeepatel/Developer/mmc/personal_config_symlinks.json";
         let provided_path = std::env::args().nth(1);
         if let Some(path) = provided_path {
             PathToConfig { path }
         } else {
-            println!("Path not provided! Checking default path: {default_path_to_config}\n");
+            let mut abs_path_to_config = String::new();
+            let rel_path_to_config = String::from("/Developer/mmc/personal_config_symlinks.json");
+            if let Ok(mut home) = std::env::var("HOME") {
+                home.push_str(&rel_path_to_config);
+                abs_path_to_config = home;
+            }
+            println!(
+                "Path not provided! Checking default path: $HOME{}\n",
+                rel_path_to_config
+            );
             PathToConfig {
-                path: default_path_to_config.to_string(),
+                path: abs_path_to_config.to_string(),
             }
         }
     }
