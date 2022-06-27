@@ -18,21 +18,21 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
             Ok(home_user) => home_user,
             Err(_) => String::from("Set $HOME."),
         };
+
         let mut from_home = to_home.clone();
         to_home.push_str(&i.to);
         let to = to_home;
         from_home.push_str(&i.from);
         let from = from_home;
 
-        let to_meta: Result<std::fs::Metadata, &'static str> = match std::fs::symlink_metadata(to) {
+        let to_meta = match std::fs::symlink_metadata(&to) {
             Ok(metadata) => Ok(metadata),
-            Err(_) => Err("Path not correct"),
+            Err(_) => Err(()),
         };
-        let from_meta: Result<std::fs::Metadata, &'static str> =
-            match std::fs::symlink_metadata(from) {
-                Ok(metadata) => Ok(metadata),
-                Err(_) => Err("Path not correct"),
-            };
+        let from_meta = match std::fs::symlink_metadata(&from) {
+            Ok(metadata) => Ok(metadata),
+            Err(_) => Err(()),
+        };
 
         if from_meta.is_ok() {
             if let Ok(meta) = to_meta {
@@ -44,7 +44,7 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
                 // std::os::unix::fs::symlink(i.from, i.to)?;
             }
         } else {
-            println!("Source file '{}' not found!!!", i.from);
+            println!("Source file '{}' not found!!!", &from);
         }
     }
 
