@@ -2,25 +2,34 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Symlink<'a> {
-    from: &'a str,
-    to: &'a str,
+struct Symlink {
+    from: String,
+    to: String,
 }
 
-type Symlinks<'a> = Vec<Symlink<'a>>;
+type Symlinks = Vec<Symlink>;
 
 pub fn create_syms(buf: &String) -> std::io::Result<()> {
     let arr: Symlinks = serde_json::from_str(buf)?;
     let mut exist_sym_count = 0;
 
     for i in arr.iter() {
-        let to_meta: Result<std::fs::Metadata, &'static str> = match std::fs::symlink_metadata(i.to)
-        {
+        let mut to_home = match std::env::var("HOME") {
+            Ok(home_user) => home_user,
+            Err(_) => String::from("Set $HOME."),
+        };
+        let mut from_home = to_home.clone();
+        to_home.push_str(&i.to);
+        let to = to_home;
+        from_home.push_str(&i.from);
+        let from = from_home;
+
+        let to_meta: Result<std::fs::Metadata, &'static str> = match std::fs::symlink_metadata(to) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err("Path not correct"),
         };
         let from_meta: Result<std::fs::Metadata, &'static str> =
-            match std::fs::symlink_metadata(i.from) {
+            match std::fs::symlink_metadata(from) {
                 Ok(metadata) => Ok(metadata),
                 Err(_) => Err("Path not correct"),
             };
