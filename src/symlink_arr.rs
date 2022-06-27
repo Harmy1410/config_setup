@@ -63,13 +63,10 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
             }
         } else {
             println!("Source file '{}' not found!!!", sym.from);
-            let mut conf_to_remove = String::new();
-            let stdin = std::io::stdin(); // We get `Stdin` here.
-            stdin.read_line(&mut conf_to_remove)?;
-            println!(
-                "Want to remove it from json config? (y/n): {}",
-                &conf_to_remove
-            );
+            let mut conf_to_remove: console::Term = '';
+            println!("Want to remove it from json config? (y/n): ",);
+            conf_to_remove.read_char()?;
+            dbg!(conf_to_remove);
         }
     }
 
