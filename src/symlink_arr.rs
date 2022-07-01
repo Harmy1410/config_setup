@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 #[warn(unused_must_use)]
 use serde::{Deserialize, Serialize};
 
@@ -19,9 +21,16 @@ impl Symlink {
 
 type Symlinks = Vec<Symlink>;
 
-pub fn create_syms(buf: &String) -> std::io::Result<()> {
-    let arr: Symlinks = serde_json::from_str(buf)?;
+fn remove_non_existing() {
+    println!("non")
+}
+
+pub fn create_syms(buf: &String) {
     let mut exist_sym_count = 0;
+
+    let mut to_remove: Vec<usize> = Vec::new();
+
+    let arr: Symlinks = serde_json::from_str(buf).unwrap();
     let arr: Symlinks = arr
         .iter()
         .map(|sym| {
@@ -42,7 +51,8 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
         })
         .collect();
 
-    for sym in &arr {
+    let mut buf = String::new();
+    for (id, sym) in arr.clone().iter().enumerate() {
         let to_meta = match std::fs::symlink_metadata(&sym.to) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err(()),
@@ -59,20 +69,29 @@ pub fn create_syms(buf: &String) -> std::io::Result<()> {
                 }
             } else {
                 println!("Creating link from: \t{}\n\t\tto: \t{}", sym.from, sym.to);
-                std::os::unix::fs::symlink(&sym.from, &sym.to)?;
+                std::os::unix::fs::symlink(&sym.from, &sym.to).unwrap();
             }
         } else {
             println!("Source file '{}' not found!!!", sym.from);
-            let mut conf_to_remove: console::Term = '';
-            println!("Want to remove it from json config? (y/n): ",);
-            conf_to_remove.read_char()?;
-            dbg!(conf_to_remove);
+            to_remove.push(id);
         }
+    }
+
+    println!(
+        "Want to remove following objects from json config? (y/n): {:#?}",
+        &to_remove.iter().map(|item| { arr[item] }).collect()
+    );
+    io::stdout().flush().unwrap();
+
+    std::io::stdin().read_line(&mut buf).unwrap();
+    let buf = buf[0..1].to_owned();
+    if buf == "y" {
+        remove_non_existing()
+    } else {
+        println!("Bye.");
     }
 
     if exist_sym_count == arr.len() {
         println!("Everything is fine!!");
     }
-
-    Ok(())
 }
