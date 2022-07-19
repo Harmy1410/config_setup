@@ -21,16 +21,7 @@ impl Symlink {
 
 type Symlinks = Vec<Symlink>;
 
-fn remove_non_existing() {
-    println!("non")
-}
-
-pub fn create_syms(buf: &String) {
-    let mut exist_sym_count = 0;
-
-    let mut to_remove: Vec<usize> = Vec::new();
-
-    let arr: Symlinks = serde_json::from_str(buf).unwrap();
+fn replace_home(arr: Symlinks) -> Symlinks {
     let arr: Symlinks = arr
         .iter()
         .map(|sym| {
@@ -50,13 +41,26 @@ pub fn create_syms(buf: &String) {
             temp
         })
         .collect();
+    arr
+}
 
-    let mut buf = String::new();
+fn remove_non_existing() {
+    println!("LOL, do it yourself!")
+}
+
+pub fn create_syms(buf: &String) {
+    let mut exist_sym_count = 0;
+    let mut to_remove: Vec<usize> = Vec::new();
+
+    let arr: Symlinks = serde_json::from_str(buf).unwrap();
+    let arr: Symlinks = replace_home(arr);
+
     for (id, sym) in arr.clone().iter().enumerate() {
         let to_meta = match std::fs::symlink_metadata(&sym.to) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err(()),
         };
+
         let from_meta = match std::fs::symlink_metadata(&sym.from) {
             Ok(metadata) => Ok(metadata),
             Err(_) => Err(()),
@@ -79,13 +83,15 @@ pub fn create_syms(buf: &String) {
 
     println!(
         "Want to remove following objects from json config? (y/n): {:#?}",
-        &to_remove.iter().map(|item| { arr[item] }).collect()
+        &to_remove.iter().map(|item| { dbg!(item) })
     );
     io::stdout().flush().unwrap();
 
-    std::io::stdin().read_line(&mut buf).unwrap();
-    let buf = buf[0..1].to_owned();
-    if buf == "y" {
+    let mut rem_reply = String::new();
+    std::io::stdin().read_line(&mut rem_reply).unwrap();
+    let rem_reply = rem_reply.trim_end();
+
+    if rem_reply == "y" {
         remove_non_existing()
     } else {
         println!("Bye.");
