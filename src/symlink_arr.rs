@@ -44,8 +44,11 @@ fn replace_home(arr: Symlinks) -> Symlinks {
     arr
 }
 
-fn remove_non_existing() {
-    println!("LOL, do it yourself!")
+fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>) {
+    for i in idx_remove {
+        let _ = arr.remove(*i);
+    }
+    dbg!(arr);
 }
 
 pub fn create_syms(buf: &String) {
@@ -53,8 +56,9 @@ pub fn create_syms(buf: &String) {
     let mut to_remove: Vec<usize> = Vec::new();
 
     let arr: Symlinks = serde_json::from_str(buf).unwrap();
-    let arr: Symlinks = replace_home(arr);
+    let mut arr: Symlinks = replace_home(arr);
 
+    dbg!(&arr);
     for (id, sym) in arr.clone().iter().enumerate() {
         let to_meta = match std::fs::symlink_metadata(&sym.to) {
             Ok(metadata) => Ok(metadata),
@@ -81,10 +85,7 @@ pub fn create_syms(buf: &String) {
         }
     }
 
-    println!(
-        "Want to remove following objects from json config? (y/n): {:#?}",
-        &to_remove.iter().map(|item| { dbg!(item) })
-    );
+    print!("Want to remove following objects from json config? (y/n): ");
     io::stdout().flush().unwrap();
 
     let mut rem_reply = String::new();
@@ -92,7 +93,7 @@ pub fn create_syms(buf: &String) {
     let rem_reply = rem_reply.trim_end();
 
     if rem_reply == "y" {
-        remove_non_existing()
+        remove_non_existing(&mut arr, &to_remove);
     } else {
         println!("Bye.");
     }
