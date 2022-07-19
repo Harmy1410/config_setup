@@ -45,9 +45,13 @@ fn replace_home(arr: Symlinks) -> Symlinks {
 }
 
 fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>) {
+    let mut c = 0;
     for i in idx_remove {
-        let _ = arr.remove(*i);
+        let shifted_index = i - c;
+        let _ = arr.remove(shifted_index);
+        c += 1;
     }
+
     dbg!(arr);
 }
 
@@ -85,7 +89,10 @@ pub fn create_syms(buf: &String) {
         }
     }
 
-    print!("Want to remove following objects from json config? (y/n): ");
+    print!(
+        "Want to remove following objects from json config? (y/n): {:#?}",
+        &to_remove
+    );
     io::stdout().flush().unwrap();
 
     let mut rem_reply = String::new();
