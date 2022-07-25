@@ -1,3 +1,4 @@
+use ansi_term::Color;
 use std::io::{self, Write};
 
 #[warn(unused_must_use)]
@@ -102,14 +103,23 @@ pub fn create_syms(buf: &String, path: &String) {
                 std::os::unix::fs::symlink(&sym.from, &sym.to).unwrap();
             }
         } else {
-            println!("Source file '{}' not found!!!", sym.from);
+            println!(
+                "{}{}",
+                Color::Red.bold().paint("404: "),
+                Color::Red.bold().paint(&sym.from)
+            );
             to_remove.push(id);
         }
     }
 
-    dbg!(&to_remove);
+    // dbg!(&to_remove);
     if to_remove.len() > 0 {
-        print!("Want to remove following objects from json config? (y/n): ");
+        print!(
+            "{}",
+            Color::White
+                .italic()
+                .paint("Want to remove following objects from json config? (y/n): ")
+        );
         io::stdout().flush().unwrap();
 
         let mut rem_reply = String::new();
@@ -119,17 +129,17 @@ pub fn create_syms(buf: &String, path: &String) {
         if rem_reply == "y" {
             // dbg!(&arr, &path);
             if remove_non_existing(&mut arr, &to_remove, &path).is_ok() {
-                println!("Removed.");
+                println!("{}", Color::Blue.italic().paint("Removed."));
                 return;
             } else {
-                println!("Something went wrong!!!");
+                println!("{}", Color::Red.bold().paint("Something went wrong!!!"));
             }
         } else {
-            println!("Bye.");
+            println!("{}", Color::White.italic().paint("Bye👋."));
         }
     }
 
     if exist_sym_count == arr.len() {
-        println!("Everything is fine!!");
+        println!("{}", Color::Blue.italic().paint("Everything is fine!!"));
     }
 }
