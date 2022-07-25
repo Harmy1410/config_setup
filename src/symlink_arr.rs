@@ -27,50 +27,33 @@ impl Symlink {
 type Symlinks = Vec<Symlink>;
 
 fn replace_home(arr: &mut Symlinks, remove: Remove) -> Symlinks {
-    let new_arr: Symlinks = match remove {
-        Remove::Yes => arr
-            .iter()
-            .map(|sym| {
-                let home = match std::env::var("HOME") {
-                    Ok(home_user) => home_user,
-                    Err(_) => String::from("Set $HOME."),
-                };
+    arr.iter()
+        .map(|sym| {
+            let env_home = match std::env::var("HOME") {
+                Ok(home_user) => home_user,
+                Err(_) => String::from("Set $HOME."),
+            };
 
-                let env_home = vec![&home];
-                let mut temp = Symlink::new();
+            let env_house = match remove {
+                Remove::Yes => vec![&env_home as &str],
+                Remove::No => vec!["$HOME", "~"],
+            };
 
-                let home = String::from("~");
-                for i in env_home {
-                    if sym.to.contains(i) || sym.from.contains(i) {
-                        temp.to = sym.to.replace(i, &home);
-                        temp.from = sym.from.replace(i, &home);
-                    }
+            let home = match remove {
+                Remove::Yes => "~",
+                Remove::No => &env_home,
+            };
+            let mut temp = Symlink::new();
+
+            for i in env_house {
+                if sym.to.contains(i) || sym.from.contains(i) {
+                    temp.to = sym.to.replace(i, &home);
+                    temp.from = sym.from.replace(i, &home);
                 }
-                temp
-            })
-            .collect(),
-        Remove::No => arr
-            .iter()
-            .map(|sym| {
-                let home = match std::env::var("HOME") {
-                    Ok(home_user) => home_user,
-                    Err(_) => String::from("Set $HOME."),
-                };
-
-                let env_home = vec!["$HOME", "~"];
-                let mut temp = Symlink::new();
-
-                for i in env_home {
-                    if sym.to.contains(i) || sym.from.contains(i) {
-                        temp.to = sym.to.replace(i, &home);
-                        temp.from = sym.from.replace(i, &home);
-                    }
-                }
-                temp
-            })
-            .collect(),
-    };
-    new_arr
+            }
+            temp
+        })
+        .collect()
 }
 
 fn remove_non_existing(
@@ -86,9 +69,8 @@ fn remove_non_existing(
     }
     let arr: Symlinks = replace_home(arr, Remove::Yes);
 
-    // serde_json::to_writer(&std::fs::File::create(config_path)?, &arr).unwrap();
+    serde_json::to_writer(&std::fs::File::create(config_path)?, &arr).unwrap();
 
-    println!("arr from remove_non_existing: {:#?}", &arr);
     Ok(())
 }
 
