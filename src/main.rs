@@ -10,7 +10,7 @@ fn main() -> std::io::Result<()> {
     std::fs::File::open(&config.path)?.read_to_string(&mut buf)?;
 
     // file for this
-    symlink_arr::create_syms(&buf);
+    symlink_arr::create_syms(&buf, &config.path);
 
     Ok(())
 }

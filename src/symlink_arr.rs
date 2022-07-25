@@ -10,6 +10,11 @@ struct Symlink {
     pub to: String,
 }
 
+enum Remove {
+    Yes,
+    No,
+}
+
 impl Symlink {
     fn new() -> Symlink {
         Symlink {
@@ -21,48 +26,79 @@ impl Symlink {
 
 type Symlinks = Vec<Symlink>;
 
-fn replace_home(arr: Symlinks) -> Symlinks {
-    let arr: Symlinks = arr
-        .iter()
-        .map(|sym| {
-            let env_home = vec!["$HOME", "~"];
-            let home = match std::env::var("HOME") {
-                Ok(home_user) => home_user,
-                Err(_) => String::from("Set $HOME."),
-            };
-            let mut temp = Symlink::new();
+fn replace_home(arr: &mut Symlinks, remove: Remove) -> Symlinks {
+    let new_arr: Symlinks = match remove {
+        Remove::Yes => arr
+            .iter()
+            .map(|sym| {
+                let home = match std::env::var("HOME") {
+                    Ok(home_user) => home_user,
+                    Err(_) => String::from("Set $HOME."),
+                };
 
-            for i in env_home {
-                if sym.to.contains(i) || sym.from.contains(i) {
-                    temp.to = sym.to.replace(i, &home);
-                    temp.from = sym.from.replace(i, &home);
+                let env_home = vec![&home];
+                let mut temp = Symlink::new();
+
+                let home = String::from("~");
+                for i in env_home {
+                    if sym.to.contains(i) || sym.from.contains(i) {
+                        temp.to = sym.to.replace(i, &home);
+                        temp.from = sym.from.replace(i, &home);
+                    }
                 }
-            }
-            temp
-        })
-        .collect();
-    arr
+                temp
+            })
+            .collect(),
+        Remove::No => arr
+            .iter()
+            .map(|sym| {
+                let home = match std::env::var("HOME") {
+                    Ok(home_user) => home_user,
+                    Err(_) => String::from("Set $HOME."),
+                };
+
+                let env_home = vec!["$HOME", "~"];
+                let mut temp = Symlink::new();
+
+                for i in env_home {
+                    if sym.to.contains(i) || sym.from.contains(i) {
+                        temp.to = sym.to.replace(i, &home);
+                        temp.from = sym.from.replace(i, &home);
+                    }
+                }
+                temp
+            })
+            .collect(),
+    };
+    new_arr
 }
 
-fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>) {
+fn remove_non_existing(
+    arr: &mut Symlinks,
+    idx_remove: &Vec<usize>,
+    config_path: &String,
+) -> std::io::Result<()> {
     let mut c = 0;
     for i in idx_remove {
         let shifted_index = i - c;
         let _ = arr.remove(shifted_index);
         c += 1;
     }
+    let arr: Symlinks = replace_home(arr, Remove::Yes);
 
-    dbg!(arr);
+    // serde_json::to_writer(&std::fs::File::create(config_path)?, &arr).unwrap();
+
+    println!("arr from remove_non_existing: {:#?}", &arr);
+    Ok(())
 }
 
-pub fn create_syms(buf: &String) {
+pub fn create_syms(buf: &String, path: &String) {
     let mut exist_sym_count = 0;
     let mut to_remove: Vec<usize> = Vec::new();
 
-    let arr: Symlinks = serde_json::from_str(buf).unwrap();
-    let mut arr: Symlinks = replace_home(arr);
+    let mut arr: Symlinks = serde_json::from_str(buf).unwrap();
+    let mut arr: Symlinks = replace_home(&mut arr, Remove::No);
 
-    dbg!(&arr);
     for (id, sym) in arr.clone().iter().enumerate() {
         let to_meta = match std::fs::symlink_metadata(&sym.to) {
             Ok(metadata) => Ok(metadata),
@@ -89,20 +125,26 @@ pub fn create_syms(buf: &String) {
         }
     }
 
-    print!(
-        "Want to remove following objects from json config? (y/n): {:#?}",
-        &to_remove
-    );
-    io::stdout().flush().unwrap();
+    dbg!(&to_remove);
+    if to_remove.len() > 0 {
+        print!("Want to remove following objects from json config? (y/n): ");
+        io::stdout().flush().unwrap();
 
-    let mut rem_reply = String::new();
-    std::io::stdin().read_line(&mut rem_reply).unwrap();
-    let rem_reply = rem_reply.trim_end();
+        let mut rem_reply = String::new();
+        std::io::stdin().read_line(&mut rem_reply).unwrap();
+        let rem_reply = rem_reply.trim_end();
 
-    if rem_reply == "y" {
-        remove_non_existing(&mut arr, &to_remove);
-    } else {
-        println!("Bye.");
+        if rem_reply == "y" {
+            // dbg!(&arr, &path);
+            if remove_non_existing(&mut arr, &to_remove, &path).is_ok() {
+                println!("Removed.");
+                return;
+            } else {
+                println!("Something went wrong!!!");
+            }
+        } else {
+            println!("Bye.");
+        }
     }
 
     if exist_sym_count == arr.len() {

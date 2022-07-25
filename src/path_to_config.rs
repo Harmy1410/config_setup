@@ -14,7 +14,7 @@ impl PathToConfig {
             PathToConfig { path }
         } else {
             let mut abs_path_to_config = String::new();
-            let rel_path_to_config = String::from("/Developer/mmc/personal_config_symlinks.json");
+            let rel_path_to_config = String::from("/Developer/mmc/config_sym.json");
 
             if let Ok(mut home) = std::env::var("HOME") {
                 home.push_str(&rel_path_to_config);
