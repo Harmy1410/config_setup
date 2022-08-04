@@ -11,17 +11,22 @@ struct Args {
         short,
         long,
         value_parser,
-        default_value = "/Developer/mmc/config_sym.json"
+        default_value = "~/Developer/mmc/config_sym.json"
     )]
     path: String,
+
+    /// Insert into json
+    #[clap(short, long, value_parser, default_value_t = true)]
+    write: bool,
 }
 
 fn main() -> std::io::Result<()> {
     let mut args = Args::parse();
 
-    if let Ok(mut home) = std::env::var("HOME") {
-        home.push_str(&args.path);
-        args.path = home;
+    if let Ok(home) = std::env::var("HOME") {
+        if args.path.contains("~") || args.path.contains("$HOME") {
+            args.path = args.path.replace("~", &home);
+        }
     } else {
         println!("Try setting $HOME variable.");
     }
