@@ -16,7 +16,7 @@ struct Args {
     path: String,
 
     /// Insert into json
-    #[clap(short, long, value_parser, default_value_t = true)]
+    #[clap(short, long, value_parser, default_value_t = false)]
     write: bool,
 }
 
@@ -41,6 +41,10 @@ fn main() -> std::io::Result<()> {
 
     // file for this
     symlink_arr::create_syms(&buf, &args.path);
+
+    if args.write {
+        symlink_arr::write();
+    }
 
     Ok(())
 }

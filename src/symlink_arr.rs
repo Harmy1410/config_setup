@@ -143,3 +143,7 @@ pub fn create_syms(buf: &String, path: &String) {
         println!("{}", Color::Blue.italic().paint("Everything is fine!!"));
     }
 }
+
+pub fn write() {
+    println!("Writing");
+}
