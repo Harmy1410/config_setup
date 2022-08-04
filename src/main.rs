@@ -19,8 +19,6 @@ struct Args {
 fn main() -> std::io::Result<()> {
     let mut args = Args::parse();
 
-    let rel_path = args.path.to_owned();
-
     if let Ok(mut home) = std::env::var("HOME") {
         home.push_str(&args.path);
         args.path = home;
@@ -29,7 +27,7 @@ fn main() -> std::io::Result<()> {
     }
 
     println!(
-        "Path not provided! Checking default path: $HOME {}\n",
+        "Path not provided! Checking default path: {:#?}\n",
         &args.path
     );
 
