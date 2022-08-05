@@ -144,6 +144,6 @@ pub fn create_syms(buf: &String, path: &String) {
     }
 }
 
-pub fn write() {
-    println!("Writing");
+pub fn write(to: &String, from: &String) {
+    dbg!(&to, &from);
 }
