@@ -57,22 +57,43 @@ fn replace_home(arr: &mut Symlinks, remove: Remove) -> Symlinks {
         .collect()
 }
 
-fn remove_non_existing(
-    arr: &mut Symlinks,
-    idx_remove: &Vec<usize>,
-    config_path: &String,
-) -> std::io::Result<()> {
-    let mut c = 0;
-    for i in idx_remove {
-        let shifted_index = i - c;
-        let _ = arr.remove(shifted_index);
-        c += 1;
+fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>, config_path: &String) {
+    //      ────────────────────────────────────────────────────────────
+    print!(
+        "{}",
+        Color::White
+            .italic()
+            .paint("Want to remove following objects from json config? (y/n): ")
+    );
+    io::stdout().flush().unwrap();
+
+    let mut rem_reply = String::new();
+    std::io::stdin().read_line(&mut rem_reply).unwrap();
+    let rem_reply = rem_reply.trim_end();
+
+    if rem_reply == "y" {
+        // dbg!(&arr, &path);
+        let mut c = 0;
+        for i in idx_remove {
+            let shifted_index = i - c;
+            let _ = arr.remove(shifted_index);
+            c += 1;
+        }
+        let arr: Symlinks = replace_home(arr, Remove::Yes);
+
+        if let Ok(file) = &std::fs::File::create(config_path) {
+            match serde_json::to_writer(file, &arr) {
+                Ok(()) => println!("{}", Color::Blue.italic().paint("Removed.")),
+                Err(err) => println!(
+                    "{}\n{}",
+                    Color::Red.bold().paint("Something went wrong!!!"),
+                    err
+                ),
+            }
+        }
+    } else {
+        println!("{}", Color::White.italic().paint("Bye👋."));
     }
-    let arr: Symlinks = replace_home(arr, Remove::Yes);
-
-    serde_json::to_writer(&std::fs::File::create(config_path)?, &arr).unwrap();
-
-    Ok(())
 }
 
 pub fn create_syms(buf: &String, path: &String, arg_remove: &bool) {
