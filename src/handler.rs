@@ -75,7 +75,7 @@ fn remove_non_existing(
     Ok(())
 }
 
-pub fn create_syms(buf: &String, path: &String) {
+pub fn create_syms(buf: &String, path: &String, arg_remove: &bool) {
     let mut exist_sym_count = 0;
     let mut to_remove: Vec<usize> = Vec::new();
 
@@ -113,7 +113,7 @@ pub fn create_syms(buf: &String, path: &String) {
     }
 
     // dbg!(&to_remove);
-    if to_remove.len() > 0 {
+    if to_remove.len() > 0 && *arg_remove {
         print!(
             "{}",
             Color::White

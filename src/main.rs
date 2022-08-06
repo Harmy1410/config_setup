@@ -1,7 +1,9 @@
 use std::io::Read;
-mod symlink_arr;
+mod handler;
 use ansi_term::Color;
 use clap::Parser;
+
+const ORANGE: ansi_term::Color = Color::RGB(245, 90, 66);
 
 /// Program to setup all config files with a json file.
 #[derive(Parser, Debug)]
@@ -19,6 +21,10 @@ struct Args {
     /// Insert into json
     #[clap(short, long, value_parser, default_value_t = false)]
     write: bool,
+
+    /// Remove Non-existing links from json
+    #[clap(short, long, value_parser, default_value_t = false)]
+    remove: bool,
 }
 
 fn main() -> std::io::Result<()> {
@@ -33,23 +39,26 @@ fn main() -> std::io::Result<()> {
     }
 
     println!(
-        "Path not provided! Checking default path: {:#?}\n",
-        &args.path
+        "{}{}\n",
+        Color::Yellow
+            .bold()
+            .paint("Path not provided! Checking default path: "),
+        Color::Yellow.bold().paint(&args.path)
     );
 
     if args.write {
         let mut to = String::new();
         let mut from = String::new();
-        println!("{}", Color::RGB(245, 90, 66).bold().paint("Link FROM: "));
+        println!("{}", ORANGE.bold().paint("Link FROM: "));
         let _ = std::io::stdin().read_line(&mut from);
-        println!("{}", Color::RGB(245, 90, 66).bold().paint("Link TO: "));
+        println!("{}", ORANGE.bold().paint("Link TO: "));
         let _ = std::io::stdin().read_line(&mut to);
-        symlink_arr::write(&to, &from);
+        handler::write(&to, &from);
     }
 
     let mut buf = String::new();
     std::fs::File::open(&args.path)?.read_to_string(&mut buf)?;
-    symlink_arr::create_syms(&buf, &args.path);
+    handler::create_syms(&buf, &args.path, &args.remove);
 
     Ok(())
 }
