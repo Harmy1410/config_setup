@@ -58,7 +58,6 @@ fn replace_home(arr: &mut Symlinks, remove: Remove) -> Symlinks {
 }
 
 fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>, config_path: &String) {
-    //      ────────────────────────────────────────────────────────────
     print!(
         "{}",
         Color::White
@@ -81,14 +80,29 @@ fn remove_non_existing(arr: &mut Symlinks, idx_remove: &Vec<usize>, config_path:
         }
         let arr: Symlinks = replace_home(arr, Remove::Yes);
 
-        if let Ok(file) = &std::fs::File::create(config_path) {
-            match serde_json::to_writer(file, &arr) {
-                Ok(()) => println!("{}", Color::Blue.italic().paint("Removed.")),
-                Err(err) => println!(
+        match &std::fs::File::create(config_path) {
+            Ok(file) => match serde_json::to_writer(file, &arr) {
+                Ok(()) => {
+                    println!("{}", Color::Blue.italic().paint("Removed."))
+                }
+                Err(err) => {
+                    println!(
+                        "{}\n{}",
+                        Color::Red
+                            .bold()
+                            .paint("Something went wrong in writing the file!!!"),
+                        err
+                    )
+                }
+            },
+            Err(err) => {
+                println!(
                     "{}\n{}",
-                    Color::Red.bold().paint("Something went wrong!!!"),
+                    Color::Red
+                        .bold()
+                        .paint("Something went wrong in creating the file!!!"),
                     err
-                ),
+                );
             }
         }
     } else {
@@ -135,32 +149,10 @@ pub fn create_syms(buf: &String, path: &String, arg_remove: &bool) {
 
     // dbg!(&to_remove);
     if to_remove.len() > 0 && *arg_remove {
-        print!(
-            "{}",
-            Color::White
-                .italic()
-                .paint("Want to remove following objects from json config? (y/n): ")
-        );
-        io::stdout().flush().unwrap();
-
-        let mut rem_reply = String::new();
-        std::io::stdin().read_line(&mut rem_reply).unwrap();
-        let rem_reply = rem_reply.trim_end();
-
-        if rem_reply == "y" {
-            // dbg!(&arr, &path);
-            if remove_non_existing(&mut arr, &to_remove, &path).is_ok() {
-                println!("{}", Color::Blue.italic().paint("Removed."));
-                return;
-            } else {
-                println!("{}", Color::Red.bold().paint("Something went wrong!!!"));
-            }
-        } else {
-            println!("{}", Color::White.italic().paint("Bye👋."));
-        }
+        remove_non_existing(&mut arr, &to_remove, &path);
     }
 
-    if exist_sym_count == arr.len() {
+    if exist_sym_count == arr.len() && !*arg_remove {
         println!("{}", Color::Blue.italic().paint("Everything is fine!!"));
     }
 }
